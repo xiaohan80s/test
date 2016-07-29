@@ -1,0 +1,250 @@
+---
+layout: post
+title:  "面向对象-继承"
+date:   2016-07-29 10:58:22 +0800
+categories: javascript
+---
+#一、问题
+####1.继承有什么作用? （难度:\***）
+继承的作用，可以使用原型链上的属性和方法，这样的方式可以节省内存空间。同时将相同作用的代码抽象出来，提高了代码的复用性，也更容易让人理解。
+***
+####2.有几种常见创建对象的方式? 举例说明? （难度:\*\***）
+* 直接声明
+这种方法的缺点就是声明太过于繁琐，重复造轮子
+```
+      var p1={
+        name:"xiaohan",
+        sayName:function(){
+          console.log(this.name);
+        }
+      };
+      var p2={
+        name:"xiaosu",
+        sayName:function(){
+          console.log(this.name);
+        }
+      };
+      p1.sayName();
+      p2.sayName();
+```
+* 工厂模式
+工厂模式比直接声明提高了代码的复用性，下面的例子中我无法获知p1、p2 和creatPerson之间的关系。
+```
+      function creatPerson(name){
+        var obj={
+          name:name,
+          sayName:function(){
+            console.log(this.name);
+          }
+        };
+        return obj;
+      }
+      var p1=creatPerson("xiaohan");
+      p1.sayName();
+      var p2=creatPerson("xiaosu");
+      p2.sayName();
+```
+* 构造函数模式
+构造函数方式可以清除的表示构造函数和对象之间的关系，但每个对象都会重复创造公用的方法。
+```
+      function Person(name){
+        this.name=name;
+        this.sayName=function(){
+          console.log(this.name);
+        }
+      }
+      var p1=new Person("xiaohan"),
+          p2=new Person("xiaosu");
+          p1.sayName();
+          p2.sayName();
+          console.log(p1.sayName===p2.sayName)  //false
+```
+* 原型方式
+原型方式将每个对象的通用方法 放到构造函数的原型对象上，这样每个对象都使用同一个公用方法，减少了内存的使用
+```
+      function Person(name){
+        this.name=name;
+      }
+      Person.prototype.sayName=function(){
+        console.log(this.name);
+      }
+      var p1=new Person("xiaohan"),
+          p2=new Person("xiaosu");
+          p1.sayName();
+          p2.sayName();
+      console.log(p1.sayName===p2.sayName)  //true
+```
+***
+####3.下面两种写法有什么区别? （难度:\***）
+方法一中每一个创建的对象都有一个独立的printName方法，方法二中每一个创建对象共享原型对象中的printName方法
+```
+    function People(name, sex){
+        this.name = name;
+        this.sex = sex;
+        this.printName = function(){
+            console.log(this.name);
+        }
+    }
+    var p1 = new People('饥人谷', 2)
+
+    //方法2
+    function Person(name, sex){
+        this.name = name;
+        this.sex = sex;
+    }
+
+    Person.prototype.printName = function(){
+        console.log(this.name);
+    }
+    var p1 = new Person('若愚', 27);
+
+```
+####4.Object.create有什么作用？兼容性如何？如何使用？ （难度:\***）
+Object.create()方法创建一个拥有指定原型和若干个指定属性的对象，是ES5的方法。
+语法：
+Object.create(*proto,* [ *propertiesObject* ])
+参数：
+*proto*  作为新创建对象的原型
+*propertiesObject * 可选。该参数对象是一组属性与值，该对象的属性名称将是新创建的对象的属性名称，值是属性描述符（这些属性描述符的结构与[Object.defineProperties()
+](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties)的第二个参数一样）。注意：该参数对象不能是 [undefined
+](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/undefined)，另外只有该对象中自身拥有的可枚举的属性才有效，也就是说该对象的原型链上属性是无效的。
+
+兼容性：IE9+，Chrome5+，Firefox 4.0+，Opear 11.60+,Safari 5+
+作用：
+1.使用Object.create实现继承
+```
+    function Animal(category,moveMethod){
+      this.category=category;
+      this.moveMethod=moveMethod;
+    }
+    Animal.prototype.say=function(){
+      console.log("我属于:"+ this.category + ",移动的时候是:" + this.moveMethod);
+    }
+    function Dog(name){
+      var category="狗类",
+          moveMethod="跑啊跑";
+      Animal.call(this,category,moveMethod);
+      this.name=name;
+
+    }
+    Dog.prototype=Object.create(Animal.prototype);
+    Dog.prototype.sayName=function(){
+      console.log(this.name);
+    }
+    Dog.prototype.constructor=Dog;
+    var d1=new Dog("旺财");
+    d1.say()    //我属于:狗类,移动的时候是:跑啊跑
+    d1.sayName() //旺财
+```
+2.创建对象
+```
+    function Animal(category,moveMethod){
+      this.category=category;
+      this.moveMethod=moveMethod;
+    }
+    Animal.prototype.say=function(){
+      console.log("我属于:"+ this.category + ",移动的时候是:" + this.moveMethod);
+    }
+    var fish=Object.create(Animal.prototype,{
+      category:{
+        writeable:true,
+        configurable: true,
+        value:"鱼"
+      },
+      moveMethod:{
+        writeable:true,
+        configurable: true,
+        value:"游啊游"
+      }
+    });
+```
+***
+####5.hasOwnProperty有什么作用？ 如何使用？ （难度:\***）
+* hasOwnProperty()方法用来判断某个对象是否含有指定的自身属性。
+```
+  var o ={
+      name:"xiaohan",
+      age:18
+    }
+    console.log(o.hasOwnProperty("name"));  //true
+    delete o.name;
+    console.log(o.hasOwnProperty("name"));  //false
+```
+* 和 [in](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/in) 运算符不同，该方法会忽略掉那些从原型链上继承到的属性
+```
+    var o ={
+      name:"xiaohan",
+      age:18
+    }
+    console.log(o.hasOwnProperty("name"));  //true
+    console.log(o.hasOwnProperty("toString")); //false
+```
+####6.实现Object.create的 polyfill，如：（ps: 写个 函数create，实现 Object.create 的功能）,什么是 polyfill？（难度:\*\***）
+```
+if(typeof Object.create!=="function"){
+  Object.create=function(){
+    function Temp(){};
+    var hasOwn=Object.prototype.hasOwnProperty;
+    return function(){
+      var args=arguments;
+          proto=args[0];
+      if(typeof proto !=="object")  return;
+      Temp.prototype=proto;
+      var obj=new Temp();
+      Temp.prototype=null;   //每次释放掉
+      if(arguments.length>1){
+        properties=Object(arguments[1]);  //装箱？ = =new Object();
+        for(var pro in properties){
+          if(hasOwn.call(properties,pro)){
+            obj[pro]=properties[pro];
+          }
+        }
+      }
+      return obj;
+    }
+  }();
+}
+```
+***
+####7.如下代码中call的作用是什么? （难度:\*\***）
+call的作用就是改变函数的上下文；
+当 Male作为函数调用时，this=window  相当于在window上加了三个属性；
+而Male作为构造函数使用时 this指代创建的对象，相当于在对象初始化了 三个属性；
+```
+    function Person(name, sex){
+      this.name = name;
+      this.sex = sex;
+    }
+    function Male(name, sex, age){
+      Person.call(this, name, sex);    //这里的 call 有什么作用
+      this.age = age;
+    }
+```
+####8.补全代码，实现继承 （难度:\*\***）
+```
+    function Person(name, sex){
+        this.name=name;
+        this.sex=sex;
+    }
+
+    Person.prototype.printName = function(){
+        console.log(this.name);
+    };
+
+    function Male(name, sex, age){
+       Person.call(this,name,sex);
+       this.age=age;
+    }
+    Male.prototype=Object.create(Person.prototype);
+    Male.prototype.constructor=Male;
+    Male.prototype.getAge = function(){
+        return this.age;
+    };
+    var ruoyu = new Male('若愚', '男', 27);
+    ruoyu.printName();
+```
+***
+参考文档:
+* [饥人谷课件-原型链 继承](http://kejian.jirengu.com/web-fe3)
+* [hasOwnProperty的用法](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty)
+* [Object.create](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
